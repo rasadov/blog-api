@@ -5,7 +5,6 @@ import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, Request, status
-# from jose import JWTError, jwt
 import jwt
 from jwt.exceptions import InvalidTokenError
 

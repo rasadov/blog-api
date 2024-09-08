@@ -10,3 +10,6 @@ class UserLoginSchema(BaseModel):
 
 class TokenData(BaseModel):
     user_id: int
+
+class PostSchema(BaseModel):
+    content: dict

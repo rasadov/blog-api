@@ -1,13 +1,7 @@
 """
 Contains utility functions for the backend.
 """
-import os
-
 from passlib.context import CryptContext
-
-
-EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
