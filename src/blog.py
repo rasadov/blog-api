@@ -1,6 +1,6 @@
 import os
 
-from fastapi import Depends, APIRouter, UploadFile, HTTPException, Query
+from fastapi import Depends, APIRouter, UploadFile, HTTPException, Request, Query
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,17 +31,18 @@ async def get_posts(
     return posts
 
 @router.post('/posts')
-async def create_post(post: PostSchema, image: UploadFile,
+async def create_post(request: Request, image: UploadFile = UploadFile(None),
                       user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if not image or not image.filename:
         raise HTTPException(status_code=400, detail="File and payload are required")
 
     with open(f'{UPLOAD_FOLDER}{image.filename}', 'wb') as f:
         f.write(image.file.read())
+
+    payload = await request.json()
     
     new_post = Post(
-        title=post.title,
-        content=post.content,
+        content=payload.content,
         image_url=image.filename,
         user_id=user.user_id,
     )
