@@ -29,7 +29,6 @@ def upgrade():
     op.create_table(
         'posts',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
-        sa.Column('title', sa.String),
         sa.Column('content', sa.JSON),
         sa.Column('user_id', sa.Integer, sa.ForeignKey('users.user_id'))
     )
