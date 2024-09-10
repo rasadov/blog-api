@@ -1,8 +1,10 @@
 """
 Contains routes for user authentication and authorization.
 """
+import os
+
 from fastapi import Depends, APIRouter, HTTPException, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +18,11 @@ import oauth2
 router = APIRouter(
     tags=["Authentication"]
 )
+
+@router.get('/login')
+async def login_page():
+    return FileResponse("src/templates/login.html")
+
 
 @router.post('/register')
 async def register(user: UserRegisterSchema, db: AsyncSession = Depends(get_db)):

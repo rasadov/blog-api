@@ -2,7 +2,7 @@ import os
 import json
 
 from fastapi import Depends, APIRouter, File, Form, UploadFile, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from werkzeug.utils import secure_filename
@@ -18,6 +18,10 @@ router = APIRouter(
 )
 
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
+
+@router.get('/admin')
+async def admin_page():
+    return FileResponse("src/templates/admin.html")
 
 @router.get('/posts/{user_id}')
 async def get_posts(

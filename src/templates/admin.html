@@ -1,0 +1,241 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="container">
+    <h1 class="my-4">Admin Panel</h1>
+
+    <div>
+        <h2 class="my-3">Blogs</h2>
+        <ul id="blogs" class="list-group"></ul>
+    </div>
+    <button id="addArticleButton" class="btn btn-primary my-3">Add New Article</button>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Add New Article</h2>
+            <form id="articleForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="azTitle">AZ Title:</label>
+                    <input type="text" class="form-control" id="azTitle" name="azTitle">
+                </div>
+                <div class="form-group">
+                    <label for="azText">AZ Text:</label>
+                    <textarea class="form-control" id="azText" name="azText"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="enTitle">EN Title:</label>
+                    <input type="text" class="form-control" id="enTitle" name="enTitle">
+                </div>
+                <div class="form-group">
+                    <label for="enText">EN Text:</label>
+                    <textarea class="form-control" id="enText" name="enText"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">Image:</label>
+                    <input type="file" class="form-control-file" id="imageFile" name="imageFile">
+                </div>
+                <button type="button" class="btn btn-success" id="submitButton" onclick="submitArticle()">Submit</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+    var modal = document.getElementById("myModal");
+    var btn = document.getElementById("addArticleButton");
+    var span = document.getElementsByClassName("close")[0];
+    var isEditMode = false;
+    var editingArticleId = null;
+
+    btn.onclick = function() {
+        openModal(false);
+    }
+
+    span.onclick = function() {
+        closeModal();
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    function openModal(editMode, article = {}) {
+        isEditMode = editMode;
+        document.getElementById('modalTitle').innerText = editMode ? 'Edit Article' : 'Add New Article';
+        document.getElementById('submitButton').innerText = editMode ? 'Update' : 'Submit';
+
+        if (editMode) {
+            editingArticleId = article.id;
+            document.getElementById('azTitle').value = article.content.title.az || '';
+            document.getElementById('azText').value = article.content.content.az || '';
+            document.getElementById('enTitle').value = article.content.title.en || '';
+            document.getElementById('enText').value = article.content.content.en || '';
+        } else {
+            editingArticleId = null;
+            document.getElementById('articleForm').reset();
+        }
+
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    function submitArticle() {
+        const azTitle = document.getElementById('azTitle').value;
+        const azText = document.getElementById('azText').value;
+        const enTitle = document.getElementById('enTitle').value;
+        const enText = document.getElementById('enText').value;
+        const imageFile = document.getElementById('imageFile').files[0];
+
+        const formData = new FormData();
+        formData.append('content', JSON.stringify({
+            title: {
+                az: azTitle,
+                en: enTitle
+            },
+            content: {
+                az: azText,
+                en: enText
+            }
+        }));
+        formData.append('image', imageFile);
+
+        const url = isEditMode
+            ? `http://localhost:5000/posts/${editingArticleId}`
+            : 'http://localhost:5000/posts';
+
+        const method = isEditMode ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            credentials: 'include',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            closeModal();
+            location.reload();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    function editArticle(id) {
+        // Fetch article by ID and open modal for editing
+        fetch(`http://localhost:5000/posts/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(article => {
+            openModal(true, article);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function deleteArticle(id) {
+        fetch(`http://localhost:5000/posts/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Deleted:', data);
+            location.reload(); // Reload the page to see the changes
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    const current_user_id = localStorage.getItem('user_id');
+
+    const blogs = fetch(`http://localhost:5000/posts/${current_user_id}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (response.status === 403) {
+            window.location.href = '/login.html';
+        }
+        return response.json();
+    })
+    .then(data => {
+        const blogsList = document.getElementById('blogs');
+        blogsList.innerHTML = data.map(blog => `
+            <li class="list-group-item">
+                <div class="card">
+                    <img src="${blog.image_url}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">${blog.content?.title?.az || 'No AZ Title'}</h5>
+                        <p class="card-text">${blog.content?.content?.az || 'No AZ Content'}</p>
+                        <h5 class="card-title">${blog.content?.title?.en || 'No EN Title'}</h5>
+                        <p class="card-text">${blog.content?.content?.en || 'No EN Content'}</p>
+                        <button class="btn btn-warning" onclick="editArticle(${blog.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteArticle(${blog.id})">Delete</button>
+                    </div>
+                </div>
+            </li>
+        `).join('');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+    </script>
+</body>
+</html>
